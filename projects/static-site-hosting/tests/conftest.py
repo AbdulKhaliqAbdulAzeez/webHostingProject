@@ -1,3 +1,8 @@
+"""
+Shared test configuration for integration and e2e tests.
+Unit tests have their own conftest in tests/unit/conftest.py.
+"""
+import os
 import socket
 import subprocess
 import time
@@ -8,14 +13,6 @@ from contextlib import contextmanager
 import pytest
 import requests
 from faker import Faker
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from playwright.sync_api import sync_playwright, Browser, Page
-
-from app.database import Base, get_engine, get_sessionmaker
-from app.models.user import User
-from app.core.config import settings
-from app.database_init import init_db, drop_db
 
 # ======================================================================================
 # Logging Configuration
@@ -27,13 +24,49 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ======================================================================================
-# Database Configuration
+# Lazy Database Imports (only when actually needed)
+# ======================================================================================
+# These are loaded lazily to avoid import-time database connections
+# that would break unit tests running without a database.
+
+_db_engine = None
+_db_sessionmaker = None
+
+
+def _get_db_engine():
+    """Lazy load database engine only when needed."""
+    global _db_engine
+    if _db_engine is None:
+        from app.database import get_engine
+        from app.core.config import settings
+        _db_engine = get_engine(database_url=settings.DATABASE_URL)
+    return _db_engine
+
+
+def _get_db_sessionmaker():
+    """Lazy load sessionmaker only when needed."""
+    global _db_sessionmaker
+    if _db_sessionmaker is None:
+        from app.database import get_sessionmaker
+        _db_sessionmaker = get_sessionmaker(engine=_get_db_engine())
+    return _db_sessionmaker
+
+
+# Only import Playwright if available (not installed for unit/integration CI)
+try:
+    from playwright.sync_api import sync_playwright, Browser, Page
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    sync_playwright = None
+    Browser = None
+    Page = None
+
+# ======================================================================================
+# Database Configuration (Lazy)
 # ======================================================================================
 fake = Faker()
 Faker.seed(12345)
-
-test_engine = get_engine(database_url=settings.DATABASE_URL)
-TestingSessionLocal = get_sessionmaker(engine=test_engine)
 
 # ======================================================================================
 # Helper Functions
@@ -51,7 +84,9 @@ def create_fake_user() -> Dict[str, str]:
 @contextmanager
 def managed_db_session():
     """Context manager for safe database session handling."""
-    session = TestingSessionLocal()
+    from sqlalchemy.exc import SQLAlchemyError
+    SessionLocal = _get_db_sessionmaker()
+    session = SessionLocal()
     try:
         yield session
     except SQLAlchemyError as e:
@@ -86,12 +121,19 @@ class ServerStartupError(Exception):
 # ======================================================================================
 # Database Fixtures
 # ======================================================================================
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def setup_test_database(request):
     """
     Set up the test database before the session starts, and tear it down after tests
     unless --preserve-db is provided.
+    
+    NOTE: This is NOT autouse; only integration/e2e tests should request it.
     """
+    from app.database import Base
+    from app.database_init import init_db, drop_db
+    
+    test_engine = _get_db_engine()
+    
     logger.info("Setting up test database...")
     try:
         Base.metadata.drop_all(bind=test_engine)
@@ -109,12 +151,14 @@ def setup_test_database(request):
         drop_db()
 
 @pytest.fixture
-def db_session() -> Generator[Session, None, None]:
+def db_session():
     """
     Provide a test-scoped database session. Commits after a successful test;
     rolls back if an exception occurs.
     """
-    session = TestingSessionLocal()
+    from sqlalchemy.orm import Session
+    SessionLocal = _get_db_sessionmaker()
+    session = SessionLocal()
     try:
         yield session
         session.commit()
@@ -133,10 +177,11 @@ def fake_user_data() -> Dict[str, str]:
     return create_fake_user()
 
 @pytest.fixture
-def test_user(db_session: Session) -> User:
+def test_user(db_session):
     """
     Create and return a single test user in the database.
     """
+    from app.models.user import User
     user_data = create_fake_user()
     user = User(**user_data)
     db_session.add(user)
@@ -146,11 +191,12 @@ def test_user(db_session: Session) -> User:
     return user
 
 @pytest.fixture
-def seed_users(db_session: Session, request) -> List[User]:
+def seed_users(db_session, request) -> List:
     """
     Seed multiple test users in the database. By default, 5 users are created
     unless a 'param' value is provided (e.g., via @pytest.mark.parametrize).
     """
+    from app.models.user import User
     num_users = getattr(request, "param", 5)
     users = [User(**create_fake_user()) for _ in range(num_users)]
     db_session.add_all(users)
@@ -219,6 +265,8 @@ def fastapi_server():
 @pytest.fixture(scope="session")
 def browser_context():
     """Provide a Playwright browser context for UI tests (session-scoped)."""
+    if not PLAYWRIGHT_AVAILABLE:
+        pytest.skip("Playwright not installed; skipping browser tests")
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             headless=True,
