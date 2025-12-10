@@ -1,9 +1,9 @@
 # app/schemas/user.py
-
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 class UserBase(BaseModel):
     """Base user schema with common fields"""

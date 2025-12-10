@@ -16,16 +16,16 @@ The application follows a RESTful API design with proper separation of concerns:
 """
 
 from contextlib import asynccontextmanager  # Used for startup/shutdown events
-from datetime import datetime, timezone, timedelta
-from uuid import UUID  # For type validation of UUIDs in path parameters
+from datetime import datetime, timedelta, timezone
 from typing import List
+from uuid import UUID  # For type validation of UUIDs in path parameters
 
 # FastAPI imports
-from fastapi import Body, FastAPI, Depends, HTTPException, status, Request, Form
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles  # For serving static files (CSS, JS)
+from fastapi import Body, Depends, FastAPI, Form, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles  # For serving static files (CSS, JS)
 from fastapi.templating import Jinja2Templates  # For HTML templates
 
 from sqlalchemy.orm import Session  # SQLAlchemy database session
@@ -50,11 +50,11 @@ from app.core.config import settings
 async def lifespan(app: FastAPI):
     """
     Lifespan context manager for FastAPI.
-    
+
     This runs when the application starts and creates all database tables
     defined in SQLAlchemy models. It's an alternative to using Alembic
     for simpler applications.
-    
+
     Args:
         app: FastAPI application instance
     """
@@ -101,7 +101,7 @@ templates = Jinja2Templates(directory="templates")
 def read_index(request: Request):
     """
     Landing page.
-    
+
     Displays the welcome page with links to register and login.
     """
     return templates.TemplateResponse("index.html", {"request": request})
@@ -110,7 +110,7 @@ def read_index(request: Request):
 def login_page(request: Request):
     """
     Login page.
-    
+
     Displays a form for users to enter credentials and log in.
     """
     return templates.TemplateResponse("login.html", {"request": request})
@@ -119,7 +119,7 @@ def login_page(request: Request):
 def register_page(request: Request):
     """
     Registration page.
-    
+
     Displays a form for new users to create an account.
     """
     return templates.TemplateResponse("register.html", {"request": request})
@@ -128,12 +128,12 @@ def register_page(request: Request):
 def dashboard_page(request: Request):
     """
     Dashboard page, listing calculations & new calculation form.
-    
+
     This is the main interface after login, where users can:
     - See all their calculations
     - Create a new calculation
     - Access links to view/edit/delete calculations
-    
+
     JavaScript in this page calls the API endpoints to fetch and display data.
     """
     return templates.TemplateResponse("dashboard.html", {"request": request})
@@ -142,14 +142,14 @@ def dashboard_page(request: Request):
 def view_calculation_page(request: Request, calc_id: str):
     """
     Page for viewing a single calculation (Read).
-    
+
     Part of the BREAD (Browse, Read, Edit, Add, Delete) pattern:
     - This is the Read page
-    
+
     Args:
         request: The FastAPI request object (required by Jinja2)
         calc_id: UUID of the calculation to view
-        
+
     Returns:
         HTMLResponse: Rendered template with calculation ID passed to frontend
     """
@@ -159,14 +159,14 @@ def view_calculation_page(request: Request, calc_id: str):
 def edit_calculation_page(request: Request, calc_id: str):
     """
     Page for editing a calculation (Update).
-    
+
     Part of the BREAD (Browse, Read, Edit, Add, Delete) pattern:
     - This is the Edit page
-    
+
     Args:
         request: The FastAPI request object (required by Jinja2)
         calc_id: UUID of the calculation to edit
-        
+
     Returns:
         HTMLResponse: Rendered template with calculation ID passed to frontend
     """
@@ -186,8 +186,8 @@ def read_health():
 # User Registration Endpoint
 # ------------------------------------------------------------------------------
 @app.post(
-    "/auth/register", 
-    response_model=UserResponse, 
+    "/auth/register",
+    response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["auth"]
 )

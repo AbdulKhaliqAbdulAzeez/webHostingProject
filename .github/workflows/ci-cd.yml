@@ -65,7 +65,7 @@ jobs:
       - name: Run unit tests
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          pytest tests/unit -v --tb=short -p no:cov --ignore=tests/integration --ignore=tests/e2e
+          pytest tests/unit -v --tb=short
 
   # ==========================================================================
   # Integration Tests - Requires PostgreSQL
@@ -123,7 +123,7 @@ jobs:
           JWT_SECRET_KEY: test-secret-key-for-ci-only
           JWT_REFRESH_SECRET_KEY: test-refresh-secret-for-ci-only
         run: |
-          pytest tests/integration -v --tb=short -p no:cov
+          pytest tests/integration -v --tb=short
 
   # ==========================================================================
   # Deploy to Server - Only on main branch after tests pass

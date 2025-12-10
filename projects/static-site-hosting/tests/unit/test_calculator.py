@@ -52,7 +52,7 @@ def test_add(a: Number, b: Number, expected: Number) -> None:
     """
     # Call the 'add' function with the provided arguments
     result = add(a, b)
-    
+
     # Assert that the result of add(a, b) matches the expected value
     assert result == expected, f"Expected add({a}, {b}) to be {expected}, but got {result}"
 
@@ -101,7 +101,7 @@ def test_subtract(a: Number, b: Number, expected: Number) -> None:
     """
     # Call the 'subtract' function with the provided arguments
     result = subtract(a, b)
-    
+
     # Assert that the result of subtract(a, b) matches the expected value
     assert result == expected, f"Expected subtract({a}, {b}) to be {expected}, but got {result}"
 
@@ -150,7 +150,7 @@ def test_multiply(a: Number, b: Number, expected: Number) -> None:
     """
     # Call the 'multiply' function with the provided arguments
     result = multiply(a, b)
-    
+
     # Assert that the result of multiply(a, b) matches the expected value
     assert result == expected, f"Expected multiply({a}, {b}) to be {expected}, but got {result}"
 
@@ -199,7 +199,7 @@ def test_divide(a: Number, b: Number, expected: float) -> None:
     """
     # Call the 'divide' function with the provided arguments
     result = divide(a, b)
-    
+
     # Assert that the result of divide(a, b) matches the expected value
     assert result == expected, f"Expected divide({a}, {b}) to be {expected}, but got {result}"
 
@@ -228,7 +228,7 @@ def test_divide_by_zero() -> None:
     with pytest.raises(ValueError) as excinfo:
         # Attempt to divide 6 by 0, which should raise a ValueError
         divide(6, 0)
-    
+
     # Assert that the exception message contains the expected error message
     assert "Cannot divide by zero!" in str(excinfo.value), \
         f"Expected error message 'Cannot divide by zero!', but got '{excinfo.value}'"

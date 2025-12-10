@@ -1,5 +1,6 @@
 # app/auth/redis.py
 import aioredis
+
 from app.core.config import get_settings
 
 settings = get_settings()

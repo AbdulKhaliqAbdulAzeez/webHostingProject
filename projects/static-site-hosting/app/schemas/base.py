@@ -1,5 +1,5 @@
 # app/schemas/base.py
-from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 class UserBase(BaseModel):
     """Base user schema with common fields."""

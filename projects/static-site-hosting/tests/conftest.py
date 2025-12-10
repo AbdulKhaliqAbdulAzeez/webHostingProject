@@ -126,14 +126,14 @@ def setup_test_database(request):
     """
     Set up the test database before the session starts, and tear it down after tests
     unless --preserve-db is provided.
-    
+
     NOTE: This is NOT autouse; only integration/e2e tests should request it.
     """
     from app.database import Base
     from app.database_init import init_db, drop_db
-    
+
     test_engine = _get_db_engine()
-    
+
     logger.info("Setting up test database...")
     try:
         Base.metadata.drop_all(bind=test_engine)
