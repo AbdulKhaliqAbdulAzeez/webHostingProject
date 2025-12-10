@@ -1,0 +1,110 @@
+# Global options
+{
+    email admin@mywebclass.org
+    admin off
+}
+
+# Main website
+www.is218hosting.site {
+    reverse_proxy backend:8000
+    
+    encode gzip
+    
+    header {
+        # pgAdmin opens tools in iframes; allow same-origin framing
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+    
+    log {
+        output file /var/log/caddy/mywebclass.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# Root domain
+is218hosting.site {
+    reverse_proxy backend:8000
+    
+    encode gzip
+    
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+    
+    log {
+        output file /var/log/caddy/mywebclass.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# pgAdmin Database Management Interface
+# SECURITY: This should NOT be publicly accessible in production
+# Option 1: Use basic auth (uncomment below)
+# Option 2: Restrict to specific IPs
+# Option 3: Use VPN and don't expose at all
+db.is218hosting.site {
+    reverse_proxy pgadmin:80
+    
+    encode gzip
+    
+    # RECOMMENDED: Add basic authentication
+    # Generate hash with: docker exec caddy caddy hash-password
+    # basicauth {
+    #     admin $2a$14$Zkx19XLiW6VYouLHR5NmfOjRYic0O3QCU43P1N7H3hPp7Rz0X8G0W
+    # }
+    
+    # ALTERNATIVE: Restrict to your IP address only
+    # @blocked not remote_ip YOUR_HOME_IP_HERE
+    # respond @blocked "Access Denied" 403
+    
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+    
+    log {
+        output file /var/log/caddy/pgadmin.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# API Backend
+api.is218hosting.site {
+    reverse_proxy backend:8000
+
+    encode gzip
+
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+
+    log {
+        output file /var/log/caddy/api.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
+
+# Template for student sites
+# student1.mywebclass.org {
+#     reverse_proxy student1-app:80
+#     encode gzip
+# }

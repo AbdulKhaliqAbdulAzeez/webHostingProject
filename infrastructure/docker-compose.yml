@@ -1,0 +1,153 @@
+# Production Infrastructure Stack
+# Caddy (reverse proxy + SSL) + PostgreSQL + pgAdmin + Watchtower
+
+services:
+  # Caddy - Reverse Proxy with Automatic HTTPS
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"       # HTTP (redirects to HTTPS)
+      - "443:443"     # HTTPS
+      - "443:443/udp" # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    networks:
+      - web
+    healthcheck:
+      # Validate Caddy config as a lightweight health indicator
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Static site - simple NGINX serving /public and /static
+  static-site:
+    image: nginx:alpine
+    container_name: static-site
+    restart: unless-stopped
+    volumes:
+      - ../projects/static-site-hosting/public:/usr/share/nginx/public:ro
+      - ../projects/static-site-hosting/static:/usr/share/nginx/static:ro
+      - ./nginx-static.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - web
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # PostgreSQL - Production Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dbadmin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-production}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    # Security: Do NOT expose port 5432 to host
+    # Projects connect via internal network only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dbadmin}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # pgAdmin - Database Management UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?Please set PGADMIN_EMAIL in .env}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Please set PGADMIN_PASSWORD in .env}
+      PGADMIN_CONFIG_SERVER_MODE: 'True'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - web
+      - internal
+    depends_on:
+      - postgres
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Backend API (FastAPI)
+  backend:
+    build: ../projects/static-site-hosting
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-prod}
+      JWT_REFRESH_SECRET_KEY: ${JWT_REFRESH_SECRET_KEY:-change-me-too}
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      BCRYPT_ROUNDS: 12
+    depends_on:
+      - postgres
+    networks:
+      - web
+      - internal
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Watchtower - Automated Container Updates (OPTIONAL)
+  # Uncomment if your Docker API version is compatible (1.44+)
+  # Check with: docker version
+  # watchtower:
+  #   image: containrrr/watchtower:latest
+  #   container_name: watchtower
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - WATCHTOWER_CLEANUP=true
+  #     - WATCHTOWER_LABEL_ENABLE=true
+  #     - WATCHTOWER_INCLUDE_RESTARTING=true
+  #     - WATCHTOWER_SCHEDULE=0 0 4 * * *
+  #   networks:
+  #     - web
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=true"
+
+# Networks
+networks:
+  web:
+    name: web
+    driver: bridge
+  internal:
+    name: internal
+    driver: bridge
+    internal: true
+
+# Volumes for persistent data
+volumes:
+  caddy_data:
+    name: caddy_data
+  caddy_config:
+    name: caddy_config
+  caddy_logs:
+    name: caddy_logs
+  postgres_data:
+    name: postgres_data
+  pgadmin_data:
+    name: pgadmin_data
