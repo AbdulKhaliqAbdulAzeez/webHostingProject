@@ -1,0 +1,326 @@
+{% extends "layout.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col justify-center py-8 sm:py-12 bg-gray-100">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="text-center text-3xl font-bold tracking-tight text-gray-800">
+      Create Account
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      Join our platform and start managing your calculations
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+      <!-- Alert for errors -->
+      <div id="errorAlert" class="hidden bg-red-100 border border-red-500 text-red-800 px-4 py-3 rounded-md mb-4" role="alert">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          <span id="errorMessage" class="block sm:inline"></span>
+        </div>
+      </div>
+
+      <!-- Alert for success -->
+      <div id="successAlert" class="hidden bg-green-100 border border-green-500 text-green-800 px-4 py-3 rounded-md mb-4" role="alert">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span id="successMessage" class="block sm:inline"></span>
+        </div>
+      </div>
+
+      <form id="registrationForm" class="space-y-5">
+        <div class="grid grid-cols-1 gap-y-5 gap-x-4 sm:grid-cols-2">
+          <div>
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <div class="mt-1">
+              <input type="text" id="username" name="username" required
+                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <p class="mt-1 text-xs text-gray-500">At least 3 characters</p>
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <div class="mt-1">
+              <input type="email" id="email" name="email" required
+                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+            <div class="mt-1">
+              <input type="text" id="first_name" name="first_name" required
+                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+            <div class="mt-1">
+              <input type="text" id="last_name" name="last_name" required
+                     class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <div class="mt-1">
+            <input type="password" id="password" name="password" required
+                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+          </div>
+          <div class="mt-1">
+            <p class="text-xs text-gray-500">
+              Must be at least 8 characters and include uppercase, lowercase, and numbers
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label for="confirm_password" class="block text-sm font-medium text-gray-700">
+            Confirm Password
+          </label>
+          <div class="mt-1">
+            <input type="password" id="confirm_password" name="confirm_password" required
+                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+          </div>
+          <p id="passwordMatchError" class="hidden mt-1 text-xs text-red-600">
+            Passwords don't match
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" 
+                  class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            Create Account
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6">
+        <div class="relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">
+              Already have an account?
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <a href="/login" 
+             class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-blue-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+            Log in instead
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+    const passwordMatchError = document.getElementById('passwordMatchError');
+
+    // Helper function to show error
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorAlert.classList.remove('hidden');
+        successAlert.classList.add('hidden');
+        
+        // Scroll to the error message if it's not visible
+        errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Helper function to show success
+    function showSuccess(message) {
+        successMessage.textContent = message;
+        successAlert.classList.remove('hidden');
+        errorAlert.classList.add('hidden');
+        
+        // Scroll to the success message if it's not visible
+        successAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Helper function to validate email format
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // Helper function to validate password strength
+    function isValidPassword(password) {
+        return password.length >= 8 && // at least 8 characters
+               /[A-Z]/.test(password) && // at least one uppercase
+               /[a-z]/.test(password) && // at least one lowercase
+               /[0-9]/.test(password); // at least one number
+    }
+    
+    // Helper function to add validation styling
+    function setInputValidation(input, isValid) {
+        if (isValid) {
+            input.classList.remove('border-red-500');
+            input.classList.add('border-green-500');
+        } else {
+            input.classList.remove('border-green-500');
+            input.classList.add('border-red-500');
+        }
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Clear previous alerts
+        errorAlert.classList.add('hidden');
+        successAlert.classList.add('hidden');
+
+        // Get form data
+        const formData = {
+            username: form.username.value.trim(),
+            email: form.email.value.trim(),
+            password: form.password.value,
+            confirm_password: form.confirm_password.value,
+            first_name: form.first_name.value.trim(),
+            last_name: form.last_name.value.trim()
+        };
+
+        // Reset all validation styling
+        form.querySelectorAll('input').forEach(input => {
+            input.classList.remove('border-red-500', 'border-green-500');
+        });
+        
+        // Perform client-side validation
+        let hasErrors = false;
+        
+        if (!formData.username || formData.username.length < 3) {
+            setInputValidation(form.username, false);
+            showError('Username must be at least 3 characters long');
+            hasErrors = true;
+        }
+
+        if (!isValidEmail(formData.email)) {
+            setInputValidation(form.email, false);
+            if (!hasErrors) showError('Please enter a valid email address');
+            hasErrors = true;
+        }
+
+        if (!isValidPassword(formData.password)) {
+            setInputValidation(form.password, false);
+            if (!hasErrors) showError('Password must be at least 8 characters long and contain uppercase, lowercase, and numbers');
+            hasErrors = true;
+        }
+
+        if (formData.password !== formData.confirm_password) {
+            setInputValidation(form.confirm_password, false);
+            passwordMatchError.classList.remove('hidden');
+            if (!hasErrors) showError('Passwords do not match');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) return;
+
+        // Show loading state on button
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating Account...';
+
+        try {
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Registration failed');
+            }
+
+            // Show success message
+            showSuccess('Registration successful! Redirecting to login...');
+
+            // Redirect to login page after 2 seconds
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+
+        } catch (error) {
+            showError(error.message || 'An error occurred during registration');
+            
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        }
+    });
+
+    // Real-time password match validation
+    const passwordInput = form.password;
+    const confirmPasswordInput = form.confirm_password;
+
+    function validatePasswordMatch() {
+        if (confirmPasswordInput.value) {
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                passwordMatchError.classList.remove('hidden');
+                setInputValidation(confirmPasswordInput, false);
+            } else {
+                passwordMatchError.classList.add('hidden');
+                setInputValidation(confirmPasswordInput, true);
+            }
+        }
+    }
+
+    // Password strength indicator
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        // Only validate if there's something to validate
+        if (password.length > 0) {
+            setInputValidation(this, isValidPassword(password));
+        } else {
+            this.classList.remove('border-red-500', 'border-green-500');
+        }
+    });
+
+    passwordInput.addEventListener('change', validatePasswordMatch);
+    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+    
+    // Email validation on blur
+    form.email.addEventListener('blur', function() {
+        if (this.value) {
+            setInputValidation(this, isValidEmail(this.value));
+        }
+    });
+    
+    // Username validation on blur
+    form.username.addEventListener('blur', function() {
+        if (this.value) {
+            setInputValidation(this, this.value.length >= 3);
+        }
+    });
+    
+    // Add touch device enhancement for better mobile experience
+    if ('ontouchstart' in document.documentElement) {
+        document.querySelectorAll('input, button').forEach(el => {
+            el.style.fontSize = '16px'; // Prevent zoom on iOS
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Calculations App{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A powerful app for performing and storing calculations">
+  <meta name="theme-color" content="#1d4ed8">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="{{ url_for('static', path='img/favicon.ico') }}" type="image/x-icon">
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
+  <!-- Preload fonts (optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  {% block head %}{% endblock %}
+
+  <style>
+    /* Critical path CSS for faster initial render */
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: var(--bg-color, #f8fafc);
+      margin: 0;
+      padding: 0;
+    }
+    .flex-grow {
+      flex-grow: 1;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+  <!-- Header -->
+  <header class="bg-blue-700 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Brand / Logo -->
+        <div class="flex items-center">
+          <a id="brandLink" href="{{ url_for('read_index') }}" class="flex items-center space-x-2">
+            <!-- Calculator Icon -->
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <span class="text-xl font-bold text-white">Calculations App</span>
+          </a>
+        </div>
+  
+        <!-- Right side: user greeting & logout -->
+        <div class="flex items-center space-x-4">
+          <span id="layoutUserWelcome" class="text-sm font-medium text-white hidden md:block"></span>
+          <button
+            id="layoutLogoutBtn"
+            class="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 
+                  font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span class="hidden sm:inline">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content area -->
+  <main class="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-300 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-sm">&copy; 2025 Calculations App. All rights reserved.</p>
+        </div>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">
+            <span class="sr-only">Privacy Policy</span>
+            <span class="text-sm">Privacy Policy</span>
+          </a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">
+            <span class="sr-only">Terms of Service</span>
+            <span class="text-sm">Terms of Service</span>
+          </a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">
+            <span class="sr-only">Help Center</span>
+            <span class="text-sm">Help Center</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+  <!-- Global Scripts -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Brand link adjustment based on auth status
+    const brandLink = document.getElementById('brandLink');
+    if (brandLink) {
+      const token = localStorage.getItem('access_token');
+      // If user is logged in, set the brand link to /dashboard
+      if (token) {
+        brandLink.href = '/dashboard';
+      }
+    }
+
+    // Set user welcome message if logged in
+    const welcomeElement = document.getElementById('layoutUserWelcome');
+    if (welcomeElement) {
+      const username = localStorage.getItem('username');
+      if (username) {
+        welcomeElement.textContent = `Welcome, ${username}!`;
+        welcomeElement.classList.remove('hidden');
+      } else {
+        welcomeElement.classList.add('hidden');
+      }
+    }
+
+    // Logout button logic
+    const logoutBtn = document.getElementById('layoutLogoutBtn');
+    if (logoutBtn) {
+      // Only show logout button if user is logged in
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        logoutBtn.classList.add('hidden');
+      } else {
+        logoutBtn.classList.remove('hidden');
+        
+        // Attach logout handler
+        logoutBtn.addEventListener('click', function() {
+          if (confirm('Are you sure you want to logout?')) {
+            // Show logout in progress
+            const originalContent = logoutBtn.innerHTML;
+            logoutBtn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Logging out...';
+            logoutBtn.disabled = true;
+            
+            // Clear local storage
+            localStorage.clear();
+            
+            // Show toast notification
+            showToast('Logged out successfully', 'success');
+            
+            // Redirect after a short delay
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 500);
+          }
+        });
+      }
+    }
+
+    // Toast notification system
+    window.showToast = function(message, type = 'info', duration = 5000) {
+      const toast = document.createElement('div');
+      
+      // Set toast classes based on type
+      let bgColor, icon;
+      switch(type) {
+        case 'success':
+          bgColor = 'bg-green-500';
+          icon = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+          break;
+        case 'error':
+          bgColor = 'bg-red-500';
+          icon = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+          break;
+        case 'warning':
+          bgColor = 'bg-yellow-500';
+          icon = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+          break;
+        default:
+          bgColor = 'bg-blue-500';
+          icon = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+      }
+
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center transform transition-all duration-300 opacity-0 translate-y-2`;
+      toast.innerHTML = `
+        ${icon}
+        <p class="text-sm font-medium">${message}</p>
+        <button class="ml-auto text-white hover:text-gray-200" aria-label="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      `;
+
+      // Add to container
+      const container = document.getElementById('toastContainer');
+      container.appendChild(toast);
+
+      // Transition in
+      setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      }, 10);
+
+      // Attach close button handler
+      toast.querySelector('button').addEventListener('click', () => {
+        removeToast(toast);
+      });
+
+      // Auto-remove after duration
+      setTimeout(() => {
+        removeToast(toast);
+      }, duration);
+    }
+
+    function removeToast(toast) {
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }
+  });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

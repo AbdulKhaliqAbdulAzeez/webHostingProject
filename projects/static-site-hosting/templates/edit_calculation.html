@@ -1,0 +1,532 @@
+{% extends "layout.html" %}
+{% block title %}Edit Calculation{% endblock %}
+
+{% block content %}
+<!-- Error/Success Alerts -->
+<div 
+  id="errorAlert" 
+  class="hidden bg-red-100 border border-red-500 text-red-800 
+         px-4 py-3 rounded-md mb-4 transition-all duration-300"
+>
+  <div class="flex items-center">
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+    </svg>
+    <span id="errorMessage" class="block sm:inline"></span>
+  </div>
+</div>
+<div 
+  id="successAlert" 
+  class="hidden bg-green-100 border border-green-500 text-green-800 
+         px-4 py-3 rounded-md mb-4 transition-all duration-300"
+>
+  <div class="flex items-center">
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+    </svg>
+    <span id="successMessage" class="block sm:inline"></span>
+  </div>
+</div>
+
+<!-- Breadcrumb Navigation -->
+<nav class="flex mb-4" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-3">
+    <li class="inline-flex items-center">
+      <a href="/dashboard" class="text-gray-700 hover:text-blue-700 inline-flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+        </svg>
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <a href="/dashboard/view/{{ calc_id }}" class="text-gray-700 hover:text-blue-700 ml-1 md:ml-2">View Calculation</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="text-gray-500 ml-1 md:ml-2 font-medium">Edit Calculation</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+<!-- Loading State -->
+<div id="loadingState" class="bg-white shadow-lg rounded-lg p-6 flex justify-center items-center min-h-[300px]">
+  <div class="flex flex-col items-center">
+    <svg class="animate-spin h-10 w-10 text-blue-700 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    <p class="text-gray-600">Loading calculation...</p>
+  </div>
+</div>
+
+<!-- Edit Calculation Form Card -->
+<div id="editCard" class="hidden bg-white shadow-lg rounded-lg border border-gray-100">
+  <!-- Card Header -->
+  <div class="bg-gray-50 rounded-t-lg px-6 py-4 border-b border-gray-100">
+    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+      <svg class="w-5 h-5 mr-2 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+      </svg>
+      Update Calculation
+    </h2>
+  </div>
+  
+  <!-- Card Body -->
+  <div class="p-6">
+    <form id="editCalculationForm" class="space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Left Column -->
+        <div class="space-y-5">
+          <!-- Type (read-only) -->
+          <div>
+            <label for="calcType" class="block text-sm font-medium text-gray-700 mb-1">Operation Type</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="calcType" 
+                name="type" 
+                readonly
+                class="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm 
+                      focus:border-blue-500 focus:ring-blue-500 py-2 pl-10"
+              />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-1 flex items-center">
+              <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Operation type cannot be changed once created.
+            </p>
+          </div>
+
+          <!-- Inputs -->
+          <div>
+            <label for="calcInputs" class="block text-sm font-medium text-gray-700 mb-1">
+              Input Values (comma-separated)
+            </label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="calcInputs" 
+                name="inputs"
+                placeholder="e.g. 5, 10, 15"
+                class="block w-full rounded-md border-gray-300 shadow-sm 
+                      focus:border-blue-500 focus:ring-blue-500 py-2 pl-10"
+              />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                </svg>
+              </div>
+            </div>
+            <p id="inputHelp" class="text-sm text-gray-500 mt-1">
+              Enter two or more numbers separated by commas.
+            </p>
+          </div>
+        </div>
+        
+        <!-- Right Column - Preview -->
+        <div id="previewSection" class="p-6 bg-gray-50 rounded-lg border border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            Result Preview
+          </h3>
+          <div id="previewResult" class="flex flex-col items-center justify-center min-h-[200px]">
+            <p class="text-gray-500 text-center">
+              Enter values above to see a preview of the result
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button 
+          type="submit"
+          class="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          Save Changes
+        </button>
+        <a 
+          href="/dashboard/view/{{ calc_id }}"
+          class="bg-gray-100 text-gray-700 border border-gray-300 px-6 py-2 rounded-md hover:bg-gray-200 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          View Details
+        </a>
+        <a 
+          href="/dashboard" 
+          class="bg-gray-700 text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 flex items-center"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Error State Card -->
+<div id="errorState" class="hidden bg-white shadow-lg rounded-lg p-6 text-center">
+  <div class="flex flex-col items-center p-6">
+    <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">Calculation Not Found</h3>
+    <p class="text-gray-600 mb-6">The calculation you're trying to edit doesn't exist or you don't have permission to edit it.</p>
+    <a 
+      href="/dashboard" 
+      class="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800 inline-flex items-center
+             focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+    >
+      Return to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  // Retrieve token
+  const token = localStorage.getItem('access_token');
+  if (!token) {
+    window.location.href = '/login';
+    return;
+  }
+
+  // Helper for alerts
+  function showError(message) {
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    errorAlert.classList.remove('hidden');
+    
+    // Smooth fade out
+    setTimeout(() => {
+      errorAlert.classList.add('opacity-0');
+      setTimeout(() => {
+        errorAlert.classList.add('hidden');
+        errorAlert.classList.remove('opacity-0');
+      }, 300);
+    }, 5000);
+    
+    // Scroll to the error message if needed
+    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  
+  function showSuccess(message) {
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+    successMessage.textContent = message;
+    successAlert.classList.remove('hidden');
+    
+    // Smooth fade out
+    setTimeout(() => {
+      successAlert.classList.add('opacity-0');
+      setTimeout(() => {
+        successAlert.classList.add('hidden');
+        successAlert.classList.remove('opacity-0');
+      }, 300);
+    }, 5000);
+    
+    // Scroll to the success message if needed
+    successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // Get calc ID from Jinja context
+  const calcId = "{{ calc_id }}";
+  const calcTypeInput = document.getElementById('calcType');
+  const calcInputsInput = document.getElementById('calcInputs');
+  const editForm = document.getElementById('editCalculationForm');
+  const previewResult = document.getElementById('previewResult');
+  
+  // Function to calculate result for preview
+  function calculatePreview(type, inputs) {
+    if (!inputs || inputs.length < 2) {
+      return null;
+    }
+    
+    let result;
+    switch (type) {
+      case 'addition':
+        result = inputs.reduce((a, b) => a + b, 0);
+        break;
+      case 'subtraction':
+        result = inputs.reduce((a, b, i) => i === 0 ? a : a - b, inputs[0]);
+        break;
+      case 'multiplication':
+        result = inputs.reduce((a, b) => a * b, 1);
+        break;
+      case 'division':
+        // Avoid division by zero
+        if (inputs.some((value, index) => index > 0 && value === 0)) {
+          return 'Cannot divide by zero';
+        }
+        result = inputs.reduce((a, b, i) => i === 0 ? a : a / b, inputs[0]);
+        break;
+      default:
+        return 'Unknown operation';
+    }
+    
+    // Format the result nicely
+    return typeof result === 'number' ? 
+      (Math.abs(result) < 0.0001 && result !== 0) ? 
+        result.toExponential(4) : 
+        Math.round(result * 10000) / 10000 : 
+      result;
+  }
+  
+  // Function to update the preview
+  function updatePreview() {
+    const type = calcTypeInput.value;
+    const inputsString = calcInputsInput.value;
+    const inputs = inputsString
+      .split(',')
+      .map(num => parseFloat(num.trim()))
+      .filter(num => !isNaN(num));
+    
+    // Create appropriate operator symbol
+    let operator;
+    switch (type) {
+      case 'addition':
+        operator = '+';
+        break;
+      case 'subtraction':
+        operator = '-';
+        break;
+      case 'multiplication':
+        operator = '×';
+        break;
+      case 'division':
+        operator = '÷';
+        break;
+      default:
+        operator = '?';
+    }
+    
+    // Update preview section
+    if (inputs.length < 2) {
+      previewResult.innerHTML = `
+        <p class="text-gray-500 text-center">
+          Enter at least two valid numbers to see the preview
+        </p>
+      `;
+      return;
+    }
+    
+    const result = calculatePreview(type, inputs);
+    
+    previewResult.innerHTML = `
+      <div class="text-center">
+        <div class="flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm">
+          ${inputs.map((input, i) => `
+            <div class="flex items-center w-full justify-center mb-2">
+              <span class="text-xl font-medium text-gray-800">${input}</span>
+              ${i < inputs.length - 1 ? `<span class="mx-2 text-xl text-blue-700 font-bold">${operator}</span>` : ''}
+            </div>
+          `).join('')}
+          <div class="w-full border-t border-gray-300 my-2"></div>
+          <div class="text-2xl font-bold text-blue-700">${result}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 1) Load existing calculation
+  async function loadCalculation() {
+    try {
+      // Show loading state
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('editCard').classList.add('hidden');
+      document.getElementById('errorState').classList.add('hidden');
+      
+      const response = await fetch(`/calculations/${calcId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        }
+        
+        if (response.status === 404) {
+          // Show not found state
+          document.getElementById('loadingState').classList.add('hidden');
+          document.getElementById('errorState').classList.remove('hidden');
+          return;
+        }
+        
+        throw new Error('Failed to load calculation');
+      }
+      
+      const calc = await response.json();
+      
+      // Hide loading, show edit form
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('editCard').classList.remove('hidden');
+      
+      // Populate form fields
+      calcTypeInput.value = calc.type;
+      calcInputsInput.value = calc.inputs.join(', ');
+      
+      // Update the preview
+      updatePreview();
+      
+    } catch (error) {
+      // Show error state
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('errorState').classList.remove('hidden');
+      showError(error.message || 'Failed to load calculation');
+    }
+  }
+
+  // Add input handler to update preview on typing
+  calcInputsInput.addEventListener('input', updatePreview);
+
+  // 2) Submit the edited calculation
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get the submit button to show loading state
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonContent = submitButton.innerHTML;
+    
+    // Parse input string into an array of floats
+    const newInputs = calcInputsInput.value
+      .split(',')
+      .map(num => parseFloat(num.trim()))
+      .filter(num => !isNaN(num));
+
+    // Validate inputs
+    if (newInputs.length < 2) {
+      showError('Please enter at least two valid numbers separated by commas.');
+      
+      // Add error class to the input
+      calcInputsInput.classList.add('border-red-500', 'bg-red-50');
+      document.getElementById('inputHelp').classList.add('text-red-500');
+      document.getElementById('inputHelp').textContent = 'At least two valid numbers are required.';
+      
+      // Focus the input
+      calcInputsInput.focus();
+      
+      // Remove error styling after a delay or on input
+      setTimeout(() => {
+        calcInputsInput.classList.remove('border-red-500', 'bg-red-50');
+        document.getElementById('inputHelp').classList.remove('text-red-500');
+        document.getElementById('inputHelp').textContent = 'Enter two or more numbers separated by commas.';
+      }, 3000);
+      
+      calcInputsInput.addEventListener('input', function removeErrorOnce() {
+        calcInputsInput.classList.remove('border-red-500', 'bg-red-50');
+        document.getElementById('inputHelp').classList.remove('text-red-500');
+        document.getElementById('inputHelp').textContent = 'Enter two or more numbers separated by commas.';
+        calcInputsInput.removeEventListener('input', removeErrorOnce);
+      });
+      
+      return;
+    }
+    
+    // Check for division by zero
+    if (calcTypeInput.value === 'division' && newInputs.some((value, index) => index > 0 && value === 0)) {
+      showError('Division by zero is not allowed.');
+      return;
+    }
+
+    // Show loading state on button
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving...';
+
+    try {
+      const response = await fetch(`/calculations/${calcId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ inputs: newInputs })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.clear();
+          window.location.href = '/login';
+          return;
+        } else if (response.status === 404) {
+          throw new Error('Calculation not found.');
+        }
+        
+        // Try to parse any error message from the API
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to update calculation');
+      }
+      
+      // Get the updated calculation
+      const updatedCalc = await response.json();
+
+      // Use toast notification if available in layout
+      if (typeof window.showToast === 'function') {
+        window.showToast('Calculation updated successfully!', 'success');
+      } else {
+        showSuccess('Calculation updated successfully!');
+      }
+      
+      // Update the preview with new data
+      updatePreview();
+      
+      // Add a success indicator to the form
+      calcInputsInput.classList.add('border-green-500');
+      setTimeout(() => {
+        calcInputsInput.classList.remove('border-green-500');
+      }, 2000);
+      
+      // Optionally redirect after a short delay
+      setTimeout(() => { 
+        window.location.href = `/dashboard/view/${calcId}`; 
+      }, 1500);
+      
+    } catch (error) {
+      showError(error.message || 'Failed to update calculation');
+    } finally {
+      // Restore the button state
+      submitButton.disabled = false;
+      submitButton.innerHTML = originalButtonContent;
+    }
+  });
+
+  // Initialize
+  loadCalculation();
+});
+</script>
+{% endblock %}

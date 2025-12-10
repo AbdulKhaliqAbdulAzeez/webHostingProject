@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IS218 Hosting – Home</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif; }
+    .container { max-width: 960px; margin: 3rem auto; padding: 0 1rem; }
+    .hero { background: #0f172a; color: #fff; border-radius: 12px; padding: 2rem; }
+    .hero h1 { margin: 0 0 0.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem; }
+    header, footer { color: #334155; }
+    a.btn { display: inline-block; background: #1d4ed8; color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; }
+    a.btn:hover { background: #1e40af; }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <h2>IS218 Hosting</h2>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Static Website Deployed</h1>
+      <p>This site is served via NGINX behind Caddy with HTTPS.</p>
+      <p>
+        Need database tools? Visit <a class="btn" href="https://db.is218hosting.site/">pgAdmin</a>
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>CSS & JS wired</h3>
+        <p>Assets are served from <code>/static</code>. Open the console to see JS run.</p>
+      </div>
+      <div class="card">
+        <h3>Subdomain routing</h3>
+        <p>www → static site, db → pgAdmin. Both over TLS via Caddy.</p>
+      </div>
+      <div class="card">
+        <h3>Next steps</h3>
+        <p>Customize this page or swap NGINX for your app later.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <p>© IS218 Hosting</p>
+  </footer>
+
+  <script src="/static/js/script.js"></script>
+  <script>
+    console.log("Static site loaded over HTTPS via Caddy.");
+  </script>
+</body>
+</html>

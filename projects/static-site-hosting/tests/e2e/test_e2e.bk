@@ -1,0 +1,28 @@
+import pytest
+
+@pytest.mark.e2e
+def test_calculator_add(page, fastapi_server):
+    """
+    Test the addition functionality of the calculator.
+    
+    This test simulates a user performing an addition operation using the calculator
+    on the frontend. It fills in two numbers, clicks the "Add" button, and verifies
+    that the result displayed is correct.
+    """
+    # Navigate the browser to the homepage URL of the FastAPI application.
+    page.goto('http://localhost:8000')
+    
+    # Fill in the first number input field (with id 'a') with the value '10'.
+    page.fill('#a', '10')
+    
+    # Fill in the second number input field (with id 'b') with the value '5'.
+    page.fill('#b', '5')
+    
+    # Click the button that has the exact text "Add". This triggers the addition operation.
+    page.click('button:text("Add")')
+    
+    # Wait for a short moment to allow the result to be updated.
+    page.wait_for_timeout(1000)  # wait for 1 second
+    
+    # Assert that the result is as expected.
+    assert page.inner_text('#result') == 'Result: 15'
