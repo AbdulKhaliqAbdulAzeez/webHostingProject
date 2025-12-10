@@ -10,6 +10,20 @@ jobs:
   ci:
     name: Backend CI
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready -U postgres
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,8 +46,18 @@ jobs:
       - name: Lint (basic import check)
         run: python -c "import fastapi, sqlalchemy"
 
-      - name: Run unit tests only
+      - name: Run tests (wait for Postgres)
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
         run: |
+          # Check DB readiness
+          pg_isready -h localhost -p 5432 -U postgres || (echo "Postgres not ready" && sleep 10)
+          # Run unit tests (and allow integration if present)
           pytest -q projects/static-site-hosting/tests/unit
 
   cd:
