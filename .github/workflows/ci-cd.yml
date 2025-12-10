@@ -164,12 +164,18 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
           SSH_USER: ${{ secrets.SSH_USER || 'deploy' }}
           PROJECT_DIR: /home/deploy/webHostingProject
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
-          ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
           set -e
           cd /home/deploy/webHostingProject
+          # Use HTTPS with token instead of SSH (avoids passphrase issues)
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git
           git fetch --all
           git reset --hard origin/main
+          # Restore SSH remote for future manual pulls
+          git remote set-url origin git@github.com:${REPO}.git
           cd infrastructure
           docker compose pull || true
           docker compose up -d --build
