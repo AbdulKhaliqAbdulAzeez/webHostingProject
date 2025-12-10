@@ -1,9 +1,11 @@
 from datetime import datetime
 from uuid import UUID
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from app.schemas.user import UserResponse
+
 from app.models.user import User
+from app.schemas.user import UserResponse
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 

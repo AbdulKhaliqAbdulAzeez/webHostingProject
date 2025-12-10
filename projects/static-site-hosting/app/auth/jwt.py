@@ -1,19 +1,20 @@
 # app/auth/jwt.py
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
 from uuid import UUID
-import secrets
 
-from app.core.config import get_settings
-from app.auth.redis import add_to_blacklist, is_blacklisted
-from app.schemas.token import TokenType
-from app.database import get_db
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+
+from app.auth.redis import is_blacklisted
+from app.core.config import get_settings
+from app.database import get_db
 from app.models.user import User
+from app.schemas.token import TokenType
 
 settings = get_settings()
 
@@ -66,8 +67,8 @@ def create_token(
     }
 
     secret = (
-        settings.JWT_SECRET_KEY 
-        if token_type == TokenType.ACCESS 
+        settings.JWT_SECRET_KEY
+        if token_type == TokenType.ACCESS
         else settings.JWT_REFRESH_SECRET_KEY
     )
 
@@ -89,34 +90,34 @@ async def decode_token(
     """
     try:
         secret = (
-            settings.JWT_SECRET_KEY 
-            if token_type == TokenType.ACCESS 
+            settings.JWT_SECRET_KEY
+            if token_type == TokenType.ACCESS
             else settings.JWT_REFRESH_SECRET_KEY
         )
-        
+
         payload = jwt.decode(
             token,
             secret,
             algorithms=[settings.ALGORITHM],
             options={"verify_exp": verify_exp}
         )
-        
+
         if payload.get("type") != token_type.value:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token type",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-            
+
         if await is_blacklisted(payload["jti"]):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-            
+
         return payload
-        
+
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -141,22 +142,22 @@ async def get_current_user(
     try:
         payload = await decode_token(token, TokenType.ACCESS)
         user_id = payload["sub"]
-        
+
         user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-            
+
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Inactive user"
             )
-            
+
         return user
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

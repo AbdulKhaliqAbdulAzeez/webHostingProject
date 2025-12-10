@@ -65,7 +65,7 @@ jobs:
       - name: Run unit tests
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          pytest tests/unit -v --tb=short -p no:cov
+          pytest tests/unit -v --tb=short -p no:cov --ignore=tests/integration --ignore=tests/e2e
 
   # ==========================================================================
   # Integration Tests - Requires PostgreSQL
